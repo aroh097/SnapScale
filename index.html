@@ -2,35 +2,116 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SnapScale</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapScale - Image Resize Tool</title>
 
+<style>
+body {
+    font-family: Arial;
+    background: #020617;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 500px;
+    margin: auto;
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+input, select, button {
+    width: 90%;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    background: #22c55e;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+    margin-top: 15px;
+    border-radius: 10px;
+}
+</style>
+
+</head>
 <body>
 
 <h1>📸 SnapScale</h1>
-<p>Resize & Enhance Your Images Instantly</p>
+<p>Resize your images instantly</p>
+
+<div class="container">
 
 <input type="file" id="file">
 
-<input type="number" id="width" placeholder="Width">
-<input type="number" id="height" placeholder="Height">
+<input type="number" id="width" placeholder="Width (px)">
+<input type="number" id="height" placeholder="Height (px)">
 
 <select id="format">
-<option value="jpeg">JPG</option>
-<option value="png">PNG</option>
-<option value="webp">WEBP</option>
+  <option value="jpeg">JPG</option>
+  <option value="png">PNG</option>
+  <option value="webp">WEBP</option>
 </select>
 
-<button onclick="upload()">Resize</button>
+<button onclick="upload()">Resize Image</button>
 
-<canvas id="canvas"></canvas>
+<p id="status"></p>
+
+<img id="preview">
 
 <a id="download" style="display:none;">
-<button>Download</button>
+  <button>Download</button>
 </a>
 
-<script src="script.js"></script>
+</div>
+
+<script>
+async function upload() {
+    const file = document.getElementById("file").files[0];
+    const width = document.getElementById("width").value;
+    const height = document.getElementById("height").value;
+    const format = document.getElementById("format").value;
+
+    if (!file) {
+        alert("Image select karo");
+        return;
+    }
+
+    document.getElementById("status").innerText = "Processing...";
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("width", width);
+    formData.append("height", height);
+    formData.append("format", format);
+
+    const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
+        method: "POST",
+        body: formData
+    });
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    document.getElementById("preview").src = url;
+
+    const download = document.getElementById("download");
+    download.href = url;
+    download.download = "snapscale." + format;
+    download.style.display = "block";
+
+    document.getElementById("status").innerText = "Done ✅";
+}
+</script>
 
 </body>
 </html>
