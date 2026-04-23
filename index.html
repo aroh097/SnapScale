@@ -3,79 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SnapScale Pro</title>
+<title>SnapScale 3D</title>
 
 <style>
 body {
-    font-family: Arial;
-    background: #020617;
-    color: white;
-    text-align: center;
-    padding: 20px;
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color: white;
+  overflow-x: hidden;
 }
 
+/* Floating background */
+.bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, #38bdf8, #22c55e);
+  filter: blur(150px);
+  opacity: 0.2;
+  z-index: -1;
+}
+
+/* Card */
 .container {
-    max-width: 500px;
-    margin: auto;
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 15px;
+  max-width: 420px;
+  margin: 50px auto;
+  padding: 25px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  transition: transform 0.2s;
 }
 
+/* 3D hover */
+.container:hover {
+  transform: rotateX(5deg) rotateY(5deg) scale(1.02);
+}
+
+/* Inputs */
 input, select, button {
-    width: 90%;
-    padding: 10px;
-    margin: 8px;
-    border-radius: 10px;
-    border: none;
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
 }
 
+/* Button glow */
 button {
-    background: #22c55e;
-    font-weight: bold;
-    cursor: pointer;
+  background: linear-gradient(45deg,#22c55e,#38bdf8);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(56,189,248,0.5);
 }
 
+button:hover {
+  transform: scale(1.05);
+}
+
+/* Image preview */
 img {
-    max-width: 100%;
-    margin-top: 15px;
-    border-radius: 10px;
+  max-width: 100%;
+  margin-top: 15px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+/* Title */
+h1 {
+  text-align: center;
+  background: linear-gradient(45deg,#38bdf8,#22c55e);
+  -webkit-background-clip: text;
+  color: transparent;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🚀 SnapScale Pro</h1>
+<div class="bg"></div>
 
-<div class="container">
+<h1>🚀 SnapScale 3D</h1>
+
+<div class="container" id="card">
 
 <input type="file" id="file">
-
-<!-- Preset -->
-<select id="preset">
-<option value="">Preset Size</option>
-<option value="1080x1080">Instagram</option>
-<option value="1280x720">YouTube</option>
-<option value="1920x1080">Full HD</option>
-</select>
 
 <input type="number" id="width" placeholder="Width">
 <input type="number" id="height" placeholder="Height">
 
-<label>
-<input type="checkbox" id="lock"> Lock Ratio
-</label>
-
-<input type="number" id="percent" placeholder="Resize %">
-
 <select id="format">
-<option value="jpeg">JPG</option>
-<option value="png">PNG</option>
-<option value="webp">WEBP</option>
+  <option value="jpeg">JPG</option>
+  <option value="png">PNG</option>
+  <option value="webp">WEBP</option>
 </select>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8">
 
 <button onclick="upload()">Resize Image</button>
 
@@ -84,12 +109,59 @@ img {
 <img id="preview">
 
 <a id="download" style="display:none;">
-<button>Download</button>
+  <button>Download</button>
 </a>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+async function upload() {
+  const file = document.getElementById("file").files[0];
+  const width = document.getElementById("width").value;
+  const height = document.getElementById("height").value;
+  const format = document.getElementById("format").value;
+
+  if (!file) return alert("Image select karo");
+
+  document.getElementById("status").innerText = "Processing...";
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("width", width);
+  formData.append("height", height);
+  formData.append("format", format);
+
+  const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
+    method: "POST",
+    body: formData
+  });
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+
+  document.getElementById("preview").src = url;
+
+  const d = document.getElementById("download");
+  d.href = url;
+  d.download = "snapscale." + format;
+  d.style.display = "block";
+
+  document.getElementById("status").innerText = "Done ✅";
+}
+
+/* 3D tilt effect */
+const card = document.getElementById("card");
+
+card.addEventListener("mousemove", (e) => {
+  const x = (window.innerWidth / 2 - e.pageX) / 20;
+  const y = (window.innerHeight / 2 - e.pageY) / 20;
+  card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+});
+
+card.addEventListener("mouseleave", () => {
+  card.style.transform = "rotateY(0) rotateX(0)";
+});
+</script>
 
 </body>
 </html>
