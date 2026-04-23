@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
@@ -9,13 +10,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Multer setup (memory storage)
+// Serve frontend (index.html)
+app.use(express.static(path.join(__dirname, "..")));
+
+// Multer setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Test route
+// Home route (open website)
 app.get("/", (req, res) => {
-    res.send("🚀 SnapScale Backend is Running!");
+    res.sendFile(path.join(__dirname, "../index.html"));
 });
 
 // Resize API
@@ -29,19 +33,15 @@ app.post("/resize", upload.single("image"), async (req, res) => {
 
         let img = sharp(req.file.buffer);
 
-        // Resize (optional if values provided)
+        // Resize
         if (width && height) {
             img = img.resize(parseInt(width), parseInt(height));
         }
 
         // Format convert
-        if (format === "png") {
-            img = img.png();
-        } else if (format === "webp") {
-            img = img.webp();
-        } else {
-            img = img.jpeg();
-        }
+        if (format === "png") img = img.png();
+        else if (format === "webp") img = img.webp();
+        else img = img.jpeg();
 
         const buffer = await img.toBuffer();
 
@@ -54,7 +54,7 @@ app.post("/resize", upload.single("image"), async (req, res) => {
     }
 });
 
-// Render compatible port
+// Port (Render compatible)
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
