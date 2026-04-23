@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SnapScale</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>📸 SnapScale</h1>
+<p>Resize & Enhance Your Images Instantly</p>
+
+<input type="file" id="file">
+
+<input type="number" id="width" placeholder="Width">
+<input type="number" id="height" placeholder="Height">
+
+<select id="format">
+<option value="jpeg">JPG</option>
+<option value="png">PNG</option>
+<option value="webp">WEBP</option>
+</select>
+
+<button onclick="upload()">Resize</button>
+
+<canvas id="canvas"></canvas>
+
+<a id="download" style="display:none;">
+<button>Download</button>
+</a>
+
+<script src="script.js"></script>
+
+</body>
+</html>
