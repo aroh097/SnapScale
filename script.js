@@ -1,8 +1,18 @@
-async function upload(){
-    const file = document.getElementById("file").files[0];
+async function upload() {
+    const fileInput = document.getElementById("file");
     const width = document.getElementById("width").value;
     const height = document.getElementById("height").value;
     const format = document.getElementById("format").value;
+
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select an image");
+        return;
+    }
+
+    // Loader (optional)
+    document.getElementById("status").innerText = "Processing...";
 
     const formData = new FormData();
     formData.append("image", file);
@@ -10,27 +20,34 @@ async function upload(){
     formData.append("height", height);
     formData.append("format", format);
 
-    const res = await fetch("http://localhost:5000/resize", {
-        method: "POST",
-        body: formData
-    });
+    try {
+        const res = await fetch("https://your-app.onrender.com/resize", {
+            method: "POST",
+            body: formData
+        });
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+        if (!res.ok) {
+            throw new Error("Server error");
+        }
 
-    const img = new Image();
-    img.onload = function(){
-        const canvas = document.getElementById("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
 
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img,0,0);
+        // Show preview
+        const img = document.getElementById("preview");
+        img.src = url;
+        img.style.display = "block";
 
+        // Enable download
         const download = document.getElementById("download");
         download.href = url;
-        download.download = "snapscale."+format;
-        download.style.display = "block";
+        download.download = "snapscale." + format;
+        download.style.display = "inline-block";
+
+        document.getElementById("status").innerText = "Done ✅";
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById("status").innerText = "Error ❌";
     }
-    img.src = url;
 }
