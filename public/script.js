@@ -1,7 +1,14 @@
 async function upload() {
 
-  const file = document.getElementById("file").files[0];
-  if (!file) return alert("Image select karo");
+  const fileInput = document.getElementById("file");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Image select karo");
+    return;
+  }
+
+  console.log("File selected:", file); // debug
 
   const width = document.getElementById("width").value;
   const height = document.getElementById("height").value;
@@ -21,20 +28,29 @@ async function upload() {
       body: formData
     });
 
-    if (!res.ok) throw new Error();
+    console.log("Response:", res);
+
+    if (!res.ok) {
+      alert("Server error");
+      return;
+    }
 
     const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const imageUrl = URL.createObjectURL(blob);
 
-    document.getElementById("preview").src = url;
+    // ✅ IMAGE SHOW
+    const preview = document.getElementById("preview");
+    preview.src = imageUrl;
+    preview.style.display = "block";
 
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "snapscale." + format;
-    d.style.display = "block";
+    // ✅ DOWNLOAD BUTTON
+    const download = document.getElementById("download");
+    download.href = imageUrl;
+    download.download = "snapscale." + format;
+    download.style.display = "inline-block";
 
   } catch (err) {
-    alert("Upload error");
     console.error(err);
+    alert("Upload fail");
   }
 }
