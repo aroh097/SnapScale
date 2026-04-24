@@ -1,113 +1,60 @@
-// ======================
-// 📤 Upload & Resize
-// ======================
-async function upload() {
+const express = require("express");
+const multer = require("multer");
+const sharp = require("sharp");
+const cors = require("cors");
+const path = require("path");
 
-  const file = document.getElementById("file").files[0];
+const app = express();
 
-  let width = document.getElementById("width").value;
-  let height = document.getElementById("height").value;
-  const percent = document.getElementById("percent")?.value;
+app.use(cors());
+app.use(express.json());
 
-  const format = document.getElementById("format").value;
-  const quality = document.getElementById("quality").value;
-  const unit = document.getElementById("unit").value;
+// ✅ static files serve
+app.use(express.static(__dirname));
 
-  if (!file) {
-    alert("Image select karo");
-    return;
-  }
+const upload = multer({ storage: multer.memoryStorage() });
 
-  // loader show
-  document.getElementById("loader").style.display = "block";
+// ✅ test route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
-  // preview instantly
-  document.getElementById("preview").src = URL.createObjectURL(file);
-
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  // % resize logic
-  if (percent) {
-    width = img.width * (percent / 100);
-    height = img.height * (percent / 100);
-  }
-
-  // default fallback
-  if (!width) width = img.width;
-  if (!height) height = img.height;
-
-  // 📏 unit conversion
-  const dpi = 96;
-
-  if (unit === "cm") {
-    width = (width / 2.54) * dpi;
-    height = (height / 2.54) * dpi;
-  }
-
-  if (unit === "inch") {
-    width = width * dpi;
-    height = height * dpi;
-  }
-
-  // form data
-  const formData = new FormData();
-  formData.append("image", file);
-  formData.append("width", Math.round(width));
-  formData.append("height", Math.round(height));
-  formData.append("format", format);
-  formData.append("quality", quality);
-
+// ✅ resize API
+app.post("/resize", upload.single("image"), async (req, res) => {
   try {
-    const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) {
-      throw new Error("Server error");
+    if (!req.file) {
+      return res.status(400).send("No image");
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const width = parseInt(req.body.width) || null;
+    const height = parseInt(req.body.height) || null;
+    const format = req.body.format || "jpeg";
+    const quality = Math.round((req.body.quality || 0.8) * 100);
 
-    // result preview
-    document.getElementById("preview").src = url;
+    let img = sharp(req.file.buffer);
 
-    // download
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "snapscale." + format;
-    d.style.display = "block";
+    if (width || height) {
+      img = img.resize(width, height);
+    }
+
+    if (format === "png") img = img.png();
+    else if (format === "webp") img = img.webp({ quality });
+    else img = img.jpeg({ quality });
+
+    const buffer = await img.toBuffer();
+
+    res.set("Content-Type", "image/" + format);
+    res.send(buffer);
 
   } catch (err) {
-    alert("Server error aa raha hai");
-    console.error(err);
+    console.error("ERROR:", err);
+    res.status(500).send("Server error");
   }
+});
 
-  document.getElementById("loader").style.display = "none";
-}
+// ✅ MUST for Render
+const PORT = process.env.PORT || 5000;
 
-
-// ======================
-// 🎨 Background Switch
-// ======================
-function setBackground(type) {
-
-  if (type === "default") {
-    document.body.style.backgroundImage =
-      "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('bg.jpg')";
-  }
-
-  else if (type === "dark") {
-    document.body.style.backgroundImage = "none";
-    document.body.style.backgroundColor = "#020617";
-  }
-
-  else if (type === "gradient") {
-    document.body.style.backgroundImage = "none";
-    document.body.style.background =
-      "linear-gradient(45deg,#0f172a,#1e293b)";
-  }
-}
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("🚀 Server running on port " + PORT);
+});
