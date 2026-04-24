@@ -5,12 +5,11 @@ async function upload() {
   const percent = document.getElementById("percent").value;
   const format = document.getElementById("format").value;
   const quality = document.getElementById("quality").value;
-  const bgMode = document.getElementById("bgMode").value;
-  const bgColor = document.getElementById("bgColor").value;
+  const unit = document.getElementById("unit").value;
 
   if (!file) return alert("Image select karo");
 
-  document.getElementById("status").innerText = "Processing...";
+  document.getElementById("loader").style.display = "block";
 
   const img = new Image();
   img.src = URL.createObjectURL(file);
@@ -21,19 +20,37 @@ async function upload() {
     height = img.height * (percent / 100);
   }
 
+  const dpi = 96;
+
+  if (unit === "cm") {
+    width = (width / 2.54) * dpi;
+    height = (height / 2.54) * dpi;
+  }
+
+  if (unit === "inch") {
+    width = width * dpi;
+    height = height * dpi;
+  }
+
+  if (!width) width = img.width;
+  if (!height) height = img.height;
+
   const formData = new FormData();
   formData.append("image", file);
   formData.append("width", width);
   formData.append("height", height);
   formData.append("format", format);
   formData.append("quality", quality);
-  formData.append("bgMode", bgMode);
-  formData.append("bgColor", bgColor);
 
   const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
     method: "POST",
     body: formData
   });
+
+  if (!res.ok) {
+    alert("Server error");
+    return;
+  }
 
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -45,21 +62,19 @@ async function upload() {
   d.download = "snapscale." + format;
   d.style.display = "block";
 
-  document.getElementById("status").innerText = "Done ✅";
+  document.getElementById("loader").style.display = "none";
 }
 
-// Theme switch
-function changeTheme() {
-  const theme = document.getElementById("theme").value;
-
-  if (theme === "light") {
-    document.body.style.background = "#ffffff";
-    document.body.style.color = "#000";
-  } else if (theme === "neon") {
+// Background switch
+function setBackground(type) {
+  if (type === "default") {
+    document.body.style.background =
+      "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('bg.jpg')";
+  }
+  if (type === "dark") {
     document.body.style.background = "#020617";
-    document.body.style.color = "#38bdf8";
-  } else {
-    document.body.style.background = "#020617";
-    document.body.style.color = "#fff";
+  }
+  if (type === "gradient") {
+    document.body.style.background = "linear-gradient(45deg,#0f172a,#1e293b)";
   }
 }
