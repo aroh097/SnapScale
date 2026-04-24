@@ -1,141 +1,45 @@
-const API = "/resize";
+const express = require("express");
+const multer = require("multer");
+const sharp = require("sharp");
+const path = require("path");
 
-// ======================
-// 📂 Drag & Drop Upload
-// ======================
-const dropArea = document.getElementById("drop-area");
-const fileInput = document.getElementById("file");
+const app = express();
 
-// highlight
-dropArea.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  dropArea.classList.add("active");
-});
+// memory storage (fast)
+const upload = multer({ storage: multer.memoryStorage() });
 
-dropArea.addEventListener("dragleave", () => {
-  dropArea.classList.remove("active");
-});
+// 📂 serve frontend
+app.use(express.static(path.join(__dirname, "../public")));
 
-// drop file
-dropArea.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropArea.classList.remove("active");
-
-  const files = e.dataTransfer.files;
-  if (files.length > 0) {
-    fileInput.files = files;
-    document.getElementById("preview").src =
-      URL.createObjectURL(files[0]);
-  }
-});
-
-// ======================
-// ⚡ Fast Upload + Resize
-// ======================
-async function upload() {
-
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("Image select karo");
-    return;
-  }
-
-  document.getElementById("loader").style.display = "block";
-
-  // 🔥 CLIENT SIDE COMPRESSION
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  const maxWidth = 1000;
-  const scale = maxWidth / img.width;
-
-  canvas.width = maxWidth;
-  canvas.height = img.height * scale;
-
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-  // compress
-  const compressedBlob = await new Promise(resolve =>
-    canvas.toBlob(resolve, "image/jpeg", 0.7)
-  );
-
-  // instant preview
-  document.getElementById("preview").src =
-    URL.createObjectURL(compressedBlob);
-
-  // send to server
-  const formData = new FormData();
-  formData.append("image", compressedBlob, "image.jpg");
-
+// 🔥 resize API
+app.post("/resize", upload.single("image"), async (req, res) => {
   try {
-    const res = await fetch(API, {
-      method: "POST",
-      body: formData
-    });
+    if (!req.file) {
+      return res.status(400).send("No file uploaded");
+    }
 
-    if (!res.ok) throw new Error();
+    const resizedImage = await sharp(req.file.buffer)
+      .resize({ width: 800 }) // change size here
+      .jpeg({ quality: 80 })
+      .toBuffer();
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    res.set("Content-Type", "image/jpeg");
+    res.send(resizedImage);
 
-    document.getElementById("preview").src = url;
-
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "snapscale.jpg";
-    d.style.display = "block";
-
-  } catch (err) {
-    alert("Upload fail ho gaya");
-    console.error(err);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
   }
+});
 
-  document.getElementById("loader").style.display = "none";
-}
+// 🏠 homepage
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
 
+// 🚀 start server
+const PORT = process.env.PORT || 10000;
 
-// ======================
-// 🤖 AI Background Remove
-// ======================
-async function removeBG() {
-
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("Image select karo");
-    return;
-  }
-
-  document.getElementById("loader").style.display = "block";
-
-  const formData = new FormData();
-  formData.append("image", file);
-
-  try {
-    const res = await fetch("/remove-bg", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) throw new Error();
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    document.getElementById("preview").src = url;
-
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "bg-removed.png";
-    d.style.display = "block";
-
-  } catch (err) {
-    alert("BG remove fail ho gaya");
-    console.error(err);
-  }
-
-  document.getElementById("loader").style.display = "none";
-}
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} 🚀`);
+});
