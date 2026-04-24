@@ -1,72 +1,62 @@
 const API = "/resize";
 
+const dropArea = document.getElementById("drop-area");
+const file = document.getElementById("file");
+
+// drag drop
+dropArea.addEventListener("dragover", e => {
+  e.preventDefault();
+});
+
+dropArea.addEventListener("drop", e => {
+  e.preventDefault();
+  file.files = e.dataTransfer.files;
+  document.getElementById("preview").src =
+    URL.createObjectURL(file.files[0]);
+});
+
+// resize
 async function upload() {
-
-  const file = document.getElementById("file").files[0];
-  let width = document.getElementById("width").value;
-  let height = document.getElementById("height").value;
-
-  const format = document.getElementById("format").value;
-  const quality = document.getElementById("quality").value;
-  const unit = document.getElementById("unit").value;
-
-  if (!file) {
-    alert("Image select karo");
-    return;
-  }
-
-  document.getElementById("loader").style.display = "block";
-
-  document.getElementById("preview").src = URL.createObjectURL(file);
-
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  if (!width) width = img.width;
-  if (!height) height = img.height;
-
-  const dpi = 96;
-
-  if (unit === "cm") {
-    width = (width / 2.54) * dpi;
-    height = (height / 2.54) * dpi;
-  }
-
-  if (unit === "inch") {
-    width = width * dpi;
-    height = height * dpi;
-  }
+  const f = file.files[0];
 
   const formData = new FormData();
-  formData.append("image", file);
-  formData.append("width", Math.round(width));
-  formData.append("height", Math.round(height));
-  formData.append("format", format);
-  formData.append("quality", quality);
+  formData.append("image", f);
+  formData.append("width", document.getElementById("width").value);
+  formData.append("height", document.getElementById("height").value);
+  formData.append("format", document.getElementById("format").value);
+  formData.append("quality", document.getElementById("quality").value);
 
-  try {
-    const res = await fetch(API, {
-      method: "POST",
-      body: formData
-    });
+  const res = await fetch(API, { method: "POST", body: formData });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
 
-    if (!res.ok) throw new Error();
+  document.getElementById("preview").src = url;
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+  const d = document.getElementById("download");
+  d.href = url;
+  d.download = "image";
+  d.style.display = "block";
+}
 
-    document.getElementById("preview").src = url;
+// remove bg
+async function removeBG() {
+  const f = file.files[0];
 
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "snapscale." + format;
-    d.style.display = "block";
+  const formData = new FormData();
+  formData.append("image", f);
 
-  } catch (err) {
-    alert("Upload ya processing fail ho gaya");
-    console.error(err);
-  }
+  const res = await fetch("/remove-bg", {
+    method: "POST",
+    body: formData
+  });
 
-  document.getElementById("loader").style.display = "none";
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+
+  document.getElementById("preview").src = url;
+
+  const d = document.getElementById("download");
+  d.href = url;
+  d.download = "bg-removed.png";
+  d.style.display = "block";
 }
