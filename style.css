@@ -1,46 +1,38 @@
 body {
-  margin: 0;
   font-family: Arial;
+  text-align: center;
+  margin: 0;
   color: white;
-
-  background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-    url("bg.jpg");
-
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: #020617;
 }
 
 .container {
-  max-width: 420px;
-  margin: 40px auto;
+  max-width: 400px;
+  margin: 30px auto;
   padding: 20px;
-
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(15px);
-
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  background: #1e293b;
+  border-radius: 15px;
 }
 
 input, select, button {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
 }
 
 button {
-  background: linear-gradient(45deg,#22c55e,#38bdf8);
+  background: #22c55e;
   color: white;
   font-weight: bold;
-  cursor: pointer;
+}
+
+#loader {
+  display: none;
 }
 
 img {
   max-width: 100%;
   margin-top: 10px;
-  border-radius: 10px;
 }
