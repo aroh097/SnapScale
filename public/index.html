@@ -1,35 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SnapScale Pro</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<h2>🚀 SnapScale Pro</h2>
+  <h2>🚀 SnapScale Pro</h2>
 
-<input type="file" id="file"><br><br>
+  <div class="container">
 
-<select id="format">
-  <option value="jpeg">JPG</option>
-  <option value="png">PNG</option>
-  <option value="webp">WEBP</option>
-</select><br><br>
+    <!-- FILE UPLOAD -->
+    <input type="file" id="file" accept="image/*">
 
-<input type="number" id="width" placeholder="Width (px)">
-<input type="number" id="height" placeholder="Height (px)"><br><br>
+    <!-- FORMAT -->
+    <select id="format">
+      <option value="jpeg">JPG</option>
+      <option value="png">PNG</option>
+      <option value="webp">WEBP</option>
+    </select>
 
-<input type="range" id="quality" min="10" max="100" value="80">
-<br><br>
+    <!-- SIZE -->
+    <input type="number" id="width" placeholder="Width (px)">
+    <input type="number" id="height" placeholder="Height (px)">
 
-<button onclick="upload()">Resize Image</button>
+    <!-- QUALITY -->
+    <label>Quality</label>
+    <input type="range" id="quality" min="10" max="100" value="80">
 
-<br><br>
-<img id="preview" width="250"><br><br>
+    <!-- BUTTON -->
+    <button onclick="upload()">Resize Image</button>
 
-<a id="download" style="display:none;">Download</a>
+    <!-- LOADER -->
+    <div id="loader" style="display:none;">Processing...</div>
 
-<script src="script.js"></script>
+    <!-- PREVIEW -->
+    <img id="preview" style="display:none; margin-top:15px; width:250px;">
+
+    <!-- DOWNLOAD -->
+    <br><br>
+    <a id="download" style="display:none;">
+      <button>Download</button>
+    </a>
+
+  </div>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
 
 </body>
 </html>
