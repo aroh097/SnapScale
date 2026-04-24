@@ -3,54 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SnapScale Pro</title>
-<link rel="stylesheet" href="style.css">
+<title>SnapScale Pro UI</title>
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#0f172a;
+  --accent:#38bdf8;
+  --accent2:#22c55e;
+  --text:#e5e7eb;
+}
+body{
+  margin:0;
+  font-family: Inter, Arial;
+  background: radial-gradient(circle at top,#0f172a,#020617);
+  color:var(--text);
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  padding:15px 20px;
+  background:rgba(255,255,255,0.03);
+  backdrop-filter: blur(10px);
+}
+.toggle{
+  cursor:pointer;
+  padding:8px 12px;
+  border-radius:10px;
+  background:var(--accent);
+}
+
+.container{
+  max-width:1000px;
+  margin:20px auto;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.05);
+  padding:20px;
+  border-radius:20px;
+  backdrop-filter: blur(20px);
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+}
+
+/* Drop */
+.drop{
+  border:2px dashed var(--accent);
+  padding:40px;
+  text-align:center;
+  cursor:pointer;
+  border-radius:15px;
+}
+
+/* Inputs */
+input,select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:none;
+}
+
+/* Button */
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(45deg,var(--accent2),var(--accent));
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* Tabs */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+.tab{
+  padding:8px 12px;
+  border-radius:10px;
+  background:#1e293b;
+  cursor:pointer;
+}
+.tab.active{
+  background:var(--accent);
+}
+
+/* Preview */
+.preview{
+  position:relative;
+}
+.preview img{
+  width:100%;
+  border-radius:15px;
+}
+.slider{
+  position:absolute;
+  top:0;
+  left:0;
+  width:50%;
+  overflow:hidden;
+}
+.slider img{
+  width:100%;
+}
+.handle{
+  position:absolute;
+  top:0;
+  left:50%;
+  width:4px;
+  height:100%;
+  background:white;
+  cursor:ew-resize;
+}
+
+/* Loader */
+.loader{
+  display:none;
+  text-align:center;
+}
+</style>
 </head>
 
 <body>
 
-<h1>🚀 SnapScale Pro</h1>
+<div class="header">
+<h2>🚀 SnapScale Pro</h2>
+<div class="toggle" onclick="toggleTheme()">Theme</div>
+</div>
 
 <div class="container">
 
-<input type="file" id="file">
+<!-- LEFT -->
+<div class="card">
 
-<h3>Resize</h3>
+<div class="drop" onclick="file.click()">
+📂 Drag & Drop Image
+<input type="file" id="file" hidden>
+</div>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('resize')">Resize</div>
+<div class="tab" onclick="showTab('compress')">Compress</div>
+<div class="tab" onclick="showTab('format')">Format</div>
+</div>
+
+<div id="resize">
 <input type="number" id="width" placeholder="Width">
 <input type="number" id="height" placeholder="Height">
-<input type="number" id="percent" placeholder="Resize %">
+<input type="number" id="percent" placeholder="% Resize">
+</div>
 
-<h3>Background</h3>
-<select id="bgMode">
-<option value="none">None</option>
-<option value="color">Solid</option>
-<option value="blur">Blur</option>
-</select>
+<div id="compress" style="display:none">
+<label>Quality</label>
+<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8">
+</div>
 
-<input type="color" id="bgColor" value="#ffffff">
-
-<h3>Format</h3>
-<select id="format">
+<div id="format" style="display:none">
+<select id="formatSelect">
 <option value="jpeg">JPG</option>
 <option value="png">PNG</option>
 <option value="webp">WEBP</option>
 </select>
+</div>
 
-<label>Quality</label>
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8">
+<button onclick="process()">Process Image</button>
 
-<h3>Theme</h3>
-<select id="theme" onchange="changeTheme()">
-<option value="dark">Dark</option>
-<option value="light">Light</option>
-<option value="neon">Neon</option>
-</select>
+<div class="loader" id="loader">Processing...</div>
 
-<button onclick="upload()">Process Image</button>
+</div>
 
-<p id="status"></p>
+<!-- RIGHT -->
+<div class="card">
 
-<img id="preview">
+<div class="preview">
+<img id="before">
+<div class="slider" id="slider">
+<img id="after">
+</div>
+<div class="handle" id="handle"></div>
+</div>
 
 <a id="download" style="display:none;">
 <button>Download</button>
@@ -58,7 +195,86 @@
 
 </div>
 
-<script src="script.js"></script>
+</div>
+
+<script>
+let fileData;
+
+document.getElementById("file").addEventListener("change", e=>{
+  fileData = e.target.files[0];
+  document.getElementById("before").src = URL.createObjectURL(fileData);
+});
+
+function showTab(tab){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+
+  document.getElementById("resize").style.display="none";
+  document.getElementById("compress").style.display="none";
+  document.getElementById("format").style.display="none";
+
+  document.getElementById(tab).style.display="block";
+}
+
+async function process(){
+  if(!fileData) return alert("Upload image");
+
+  document.getElementById("loader").style.display="block";
+
+  let width = document.getElementById("width").value;
+  let height = document.getElementById("height").value;
+  let percent = document.getElementById("percent").value;
+  let format = document.getElementById("formatSelect").value;
+  let quality = document.getElementById("quality").value;
+
+  const img = new Image();
+  img.src = URL.createObjectURL(fileData);
+  await new Promise(r=>img.onload=r);
+
+  if(percent){
+    width = img.width*(percent/100);
+    height = img.height*(percent/100);
+  }
+
+  if(!width) width=img.width;
+  if(!height) height=img.height;
+
+  const formData = new FormData();
+  formData.append("image", fileData);
+  formData.append("width", width);
+  formData.append("height", height);
+  formData.append("format", format);
+  formData.append("quality", quality);
+
+  const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
+    method:"POST",
+    body:formData
+  });
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+
+  document.getElementById("after").src = url;
+
+  document.getElementById("download").href = url;
+  document.getElementById("download").style.display="block";
+
+  document.getElementById("loader").style.display="none";
+}
+
+/* slider */
+const handle = document.getElementById("handle");
+handle.onmousemove = e=>{
+  const x = e.offsetX;
+  document.getElementById("slider").style.width = x+"px";
+}
+
+/* theme */
+function toggleTheme(){
+  document.body.style.background =
+    document.body.style.background=="white" ? "#020617" : "white";
+}
+</script>
 
 </body>
 </html>
