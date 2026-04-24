@@ -4,47 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SnapScale Pro</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: radial-gradient(circle at top, #0f172a, #020617);
-  color: white;
-  text-align: center;
-}
-
-.container {
-  max-width: 420px;
-  margin: 30px auto;
-  padding: 20px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-}
-
-input, select, button {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 10px;
-  border: none;
-}
-
-button {
-  background: linear-gradient(45deg,#22c55e,#38bdf8);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-img {
-  max-width: 100%;
-  margin-top: 15px;
-  border-radius: 10px;
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -55,9 +15,21 @@ img {
 
 <input type="file" id="file">
 
+<h3>Resize</h3>
 <input type="number" id="width" placeholder="Width">
 <input type="number" id="height" placeholder="Height">
+<input type="number" id="percent" placeholder="Resize %">
 
+<h3>Background</h3>
+<select id="bgMode">
+<option value="none">None</option>
+<option value="color">Solid</option>
+<option value="blur">Blur</option>
+</select>
+
+<input type="color" id="bgColor" value="#ffffff">
+
+<h3>Format</h3>
 <select id="format">
 <option value="jpeg">JPG</option>
 <option value="png">PNG</option>
@@ -67,12 +39,14 @@ img {
 <label>Quality</label>
 <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8">
 
-<label><input type="checkbox" id="removeBg"> Remove Background</label>
+<h3>Theme</h3>
+<select id="theme" onchange="changeTheme()">
+<option value="dark">Dark</option>
+<option value="light">Light</option>
+<option value="neon">Neon</option>
+</select>
 
-<label>Background Color</label>
-<input type="color" id="bgColor" value="#ffffff">
-
-<button onclick="upload()">Resize Image</button>
+<button onclick="upload()">Process Image</button>
 
 <p id="status"></p>
 
@@ -84,47 +58,7 @@ img {
 
 </div>
 
-<script>
-async function upload() {
-  const file = document.getElementById("file").files[0];
-  const width = document.getElementById("width").value;
-  const height = document.getElementById("height").value;
-  const format = document.getElementById("format").value;
-  const quality = document.getElementById("quality").value;
-  const removeBg = document.getElementById("removeBg").checked;
-  const bgColor = document.getElementById("bgColor").value;
-
-  if (!file) return alert("Image select karo");
-
-  document.getElementById("status").innerText = "Processing...";
-
-  const formData = new FormData();
-  formData.append("image", file);
-  formData.append("width", width);
-  formData.append("height", height);
-  formData.append("format", format);
-  formData.append("quality", quality);
-  formData.append("removeBg", removeBg);
-  formData.append("bgColor", bgColor);
-
-  const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
-    method: "POST",
-    body: formData
-  });
-
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-
-  document.getElementById("preview").src = url;
-
-  const d = document.getElementById("download");
-  d.href = url;
-  d.download = "snapscale." + format;
-  d.style.display = "block";
-
-  document.getElementById("status").innerText = "Done ✅";
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
