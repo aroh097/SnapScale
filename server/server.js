@@ -1,39 +1,79 @@
-const express = require("express");
-const multer = require("multer");
-const sharp = require("sharp");
-const cors = require("cors");
-const path = require("path");
+async function upload() {
+  const file = document.getElementById("file").files[0];
 
-const app = express();
+  let width = document.getElementById("width").value;
+  let height = document.getElementById("height").value;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "..")));
+  const format = document.getElementById("format").value;
+  const quality = document.getElementById("quality").value;
+  const unit = document.getElementById("unit").value;
 
-const upload = multer({ storage: multer.memoryStorage() });
+  if (!file) return alert("Image select karo");
 
-app.post("/resize", upload.single("image"), async (req, res) => {
-  try {
-    let width = parseInt(req.body.width) || 500;
-    let height = parseInt(req.body.height) || 500;
-    const format = req.body.format || "jpeg";
-    const quality = parseFloat(req.body.quality || 0.8) * 100;
+  document.getElementById("loader").style.display = "block";
 
-    let img = sharp(req.file.buffer).resize(width, height);
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  await new Promise(r => img.onload = r);
 
-    if (format === "png") img = img.png();
-    else if (format === "webp") img = img.webp({ quality });
-    else img = img.jpeg({ quality });
+  // default fallback
+  if (!width) width = img.width;
+  if (!height) height = img.height;
 
-    const buffer = await img.toBuffer();
+  // unit convert
+  const dpi = 96;
 
-    res.set("Content-Type", "image/" + format);
-    res.send(buffer);
-
-  } catch (err) {
-    res.status(500).send("Error");
+  if (unit === "cm") {
+    width = (width / 2.54) * dpi;
+    height = (height / 2.54) * dpi;
   }
-});
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("SnapScale running"));
+  if (unit === "inch") {
+    width = width * dpi;
+    height = height * dpi;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("width", Math.round(width));
+  formData.append("height", Math.round(height));
+  formData.append("format", format);
+  formData.append("quality", quality);
+
+  try {
+    const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!res.ok) throw new Error();
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    document.getElementById("preview").src = url;
+
+    const d = document.getElementById("download");
+    d.href = url;
+    d.download = "snapscale." + format;
+    d.style.display = "block";
+
+  } catch {
+    alert("Server error aa raha hai");
+  }
+
+  document.getElementById("loader").style.display = "none";
+}
+
+function setBackground(type) {
+  if (type === "default") {
+    document.body.style.background =
+      "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('bg.jpg')";
+  } 
+  else if (type === "dark") {
+    document.body.style.background = "#020617";
+  } 
+  else {
+    document.body.style.background = "linear-gradient(45deg,#0f172a,#1e293b)";
+  }
+}
