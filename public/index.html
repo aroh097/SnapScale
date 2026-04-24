@@ -6,45 +6,30 @@
 </head>
 <body>
 
-<h1>🚀 SnapScale Pro</h1>
+<h2>🚀 SnapScale Pro</h2>
 
-<div class="container">
+<input type="file" id="file"><br><br>
 
-  <!-- Drag Drop -->
-  <div id="drop-area">
-    <p>📂 Drag & Drop Image</p>
-    <button onclick="file.click()">Choose File</button>
-    <input type="file" id="file" hidden>
-  </div>
+<select id="format">
+  <option value="jpeg">JPG</option>
+  <option value="png">PNG</option>
+  <option value="webp">WEBP</option>
+</select><br><br>
 
-  <select id="unit">
-    <option value="px">Pixels</option>
-    <option value="cm">CM</option>
-    <option value="inch">Inch</option>
-  </select>
+<input type="number" id="width" placeholder="Width (px)">
+<input type="number" id="height" placeholder="Height (px)"><br><br>
 
-  <input type="number" id="width" placeholder="Width">
-  <input type="number" id="height" placeholder="Height">
+<input type="range" id="quality" min="10" max="100" value="80">
+<br><br>
 
-  <select id="format">
-    <option value="jpeg">JPG</option>
-    <option value="png">PNG</option>
-    <option value="webp">WEBP</option>
-  </select>
+<button onclick="upload()">Resize Image</button>
 
-  <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8">
+<br><br>
+<img id="preview" width="250"><br><br>
 
-  <button onclick="upload()">Resize</button>
-  <button onclick="removeBG()">Remove Background</button>
-
-  <img id="preview">
-
-  <a id="download" style="display:none;">
-    <button>Download</button>
-  </a>
-
-</div>
+<a id="download" style="display:none;">Download</a>
 
 <script src="script.js"></script>
+
 </body>
 </html>
