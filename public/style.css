@@ -1,27 +1,19 @@
 body {
-  font-family: Arial;
+  background: #0b132b;
   color: white;
   text-align: center;
-
-  background: url("/bg.jpg") no-repeat center;
-  background-size: cover;
-}
-
-.container {
-  max-width: 400px;
-  margin: 30px auto;
-  padding: 20px;
-  background: rgba(0,0,0,0.6);
-  border-radius: 15px;
+  font-family: sans-serif;
 }
 
 input, select, button {
-  width: 100%;
+  margin: 8px;
   padding: 10px;
-  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
 }
 
-#drop-area {
-  border: 2px dashed white;
-  padding: 20px;
+button {
+  background: #00c853;
+  color: white;
+  cursor: pointer;
 }
