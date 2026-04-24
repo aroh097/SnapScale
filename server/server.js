@@ -4,42 +4,44 @@ const sharp = require("sharp");
 const path = require("path");
 
 const app = express();
-
-// memory storage (fast)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 📂 serve frontend
+// serve frontend
 app.use(express.static(path.join(__dirname, "../public")));
 
-// 🔥 resize API
+// resize API
 app.post("/resize", upload.single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).send("No file uploaded");
+    if (!req.file) return res.status(400).send("No file");
+
+    const { width, height, format = "jpeg", quality = 80 } = req.body;
+
+    let img = sharp(req.file.buffer);
+
+    // optional resize
+    if (width || height) {
+      img = img.resize({
+        width: width ? parseInt(width) : undefined,
+        height: height ? parseInt(height) : undefined,
+      });
     }
 
-    const resizedImage = await sharp(req.file.buffer)
-      .resize({ width: 800 }) // change size here
-      .jpeg({ quality: 80 })
-      .toBuffer();
+    // format
+    if (format === "png") img = img.png();
+    else if (format === "webp") img = img.webp({ quality: parseInt(quality) });
+    else img = img.jpeg({ quality: parseInt(quality) });
 
-    res.set("Content-Type", "image/jpeg");
-    res.send(resizedImage);
+    const buffer = await img.toBuffer();
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
+    res.set("Content-Type", `image/${format}`);
+    res.send(buffer);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error");
   }
 });
 
-// 🏠 homepage
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
-// 🚀 start server
-const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} 🚀`);
+app.listen(process.env.PORT || 10000, () => {
+  console.log("Server running 🚀");
 });
