@@ -1,14 +1,10 @@
+// ======================
+// Resize Upload
+// ======================
 async function upload() {
 
-  const fileInput = document.getElementById("file");
-  const file = fileInput.files[0];
-
-  if (!file) {
-    alert("Image select karo");
-    return;
-  }
-
-  console.log("File selected:", file); // debug
+  const file = document.getElementById("file").files[0];
+  if (!file) return alert("Image select karo");
 
   const width = document.getElementById("width").value;
   const height = document.getElementById("height").value;
@@ -22,35 +18,62 @@ async function upload() {
   formData.append("format", format);
   formData.append("quality", quality);
 
-  try {
-    const res = await fetch("/resize", {
-      method: "POST",
-      body: formData
-    });
+  const res = await fetch("/resize", {
+    method: "POST",
+    body: formData
+  });
 
-    console.log("Response:", res);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
 
-    if (!res.ok) {
-      alert("Server error");
-      return;
+  document.getElementById("preview").src = url;
+
+  const d = document.getElementById("download");
+  d.href = url;
+  d.download = "snapscale." + format;
+  d.style.display = "block";
+}
+
+// ======================
+// FREE AI BG REMOVE
+// ======================
+async function aiRemoveBG() {
+
+  const file = document.getElementById("file").files[0];
+  if (!file) return alert("Image select karo");
+
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+
+  await new Promise(r => img.onload = r);
+
+  const net = await bodyPix.load();
+
+  const segmentation = await net.segmentPerson(img);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < segmentation.data.length; i++) {
+    if (segmentation.data[i] === 0) {
+      imageData.data[i * 4 + 3] = 0;
     }
-
-    const blob = await res.blob();
-    const imageUrl = URL.createObjectURL(blob);
-
-    // ✅ IMAGE SHOW
-    const preview = document.getElementById("preview");
-    preview.src = imageUrl;
-    preview.style.display = "block";
-
-    // ✅ DOWNLOAD BUTTON
-    const download = document.getElementById("download");
-    download.href = imageUrl;
-    download.download = "snapscale." + format;
-    download.style.display = "inline-block";
-
-  } catch (err) {
-    console.error(err);
-    alert("Upload fail");
   }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  const url = canvas.toDataURL("image/png");
+
+  document.getElementById("preview").src = url;
+
+  const d = document.getElementById("download");
+  d.href = url;
+  d.download = "ai-bg-remove.png";
+  d.style.display = "block";
 }
