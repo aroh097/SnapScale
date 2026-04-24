@@ -8,35 +8,22 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// serve frontend
 app.use(express.static(path.join(__dirname, "..")));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/resize", upload.single("image"), async (req, res) => {
   try {
-    const { width, height, format, quality, bgMode, bgColor } = req.body;
+    let width = parseInt(req.body.width) || 500;
+    let height = parseInt(req.body.height) || 500;
+    const format = req.body.format || "jpeg";
+    const quality = parseFloat(req.body.quality || 0.8) * 100;
 
-    let img = sharp(req.file.buffer);
-
-    if (width && height) {
-      img = img.resize(parseInt(width), parseInt(height));
-    }
-
-    if (bgMode === "color") {
-      img = img.flatten({ background: bgColor });
-    }
-
-    if (bgMode === "blur") {
-      img = img.blur(10);
-    }
-
-    const q = quality ? parseFloat(quality) * 100 : 80;
+    let img = sharp(req.file.buffer).resize(width, height);
 
     if (format === "png") img = img.png();
-    else if (format === "webp") img = img.webp({ quality: q });
-    else img = img.jpeg({ quality: q });
+    else if (format === "webp") img = img.webp({ quality });
+    else img = img.jpeg({ quality });
 
     const buffer = await img.toBuffer();
 
