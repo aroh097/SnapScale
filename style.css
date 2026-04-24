@@ -1,38 +1,104 @@
-body {
-  font-family: Arial;
-  text-align: center;
+/* RESET */
+* {
   margin: 0;
-  color: white;
-  background: #020617;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+/* BODY BACKGROUND */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  min-height: 100vh;
+
+  /* 🔥 BACKGROUND IMAGE */
+  background: url("/bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* TITLE */
+h1 {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 28px;
+}
+
+/* MAIN CONTAINER (GLASS UI) */
 .container {
   max-width: 400px;
   margin: 30px auto;
   padding: 20px;
-  background: #1e293b;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+
   border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-input, select, button {
+/* INPUTS */
+input, select {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
+
   border-radius: 8px;
   border: none;
+  outline: none;
+
+  font-size: 14px;
 }
 
+/* BUTTON */
 button {
-  background: #22c55e;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: linear-gradient(45deg, #22c55e, #16a34a);
   color: white;
   font-weight: bold;
+  font-size: 15px;
+
+  cursor: pointer;
+  transition: 0.3s;
 }
 
+button:hover {
+  transform: scale(1.03);
+  background: linear-gradient(45deg, #16a34a, #15803d);
+}
+
+/* LOADER */
 #loader {
   display: none;
+  margin-top: 10px;
+  text-align: center;
 }
 
-img {
-  max-width: 100%;
-  margin-top: 10px;
+/* IMAGE PREVIEW */
+#preview {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+
+/* DOWNLOAD BUTTON */
+#download button {
+  background: linear-gradient(45deg, #3b82f6, #2563eb);
+}
+
+/* RANGE SLIDER */
+input[type="range"] {
+  width: 100%;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 500px) {
+  .container {
+    margin: 20px;
+  }
 }
