@@ -1,79 +1,58 @@
-async function upload() {
-  const file = document.getElementById("file").files[0];
+const express = require("express");
+const multer = require("multer");
+const sharp = require("sharp");
+const cors = require("cors");
 
-  let width = document.getElementById("width").value;
-  let height = document.getElementById("height").value;
+const app = express();
 
-  const format = document.getElementById("format").value;
-  const quality = document.getElementById("quality").value;
-  const unit = document.getElementById("unit").value;
+app.use(cors());
 
-  if (!file) return alert("Image select karo");
+const upload = multer({ storage: multer.memoryStorage() });
 
-  document.getElementById("loader").style.display = "block";
+// test route
+app.get("/", (req, res) => {
+  res.send("SnapScale backend running ✅");
+});
 
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  await new Promise(r => img.onload = r);
-
-  // default fallback
-  if (!width) width = img.width;
-  if (!height) height = img.height;
-
-  // unit convert
-  const dpi = 96;
-
-  if (unit === "cm") {
-    width = (width / 2.54) * dpi;
-    height = (height / 2.54) * dpi;
-  }
-
-  if (unit === "inch") {
-    width = width * dpi;
-    height = height * dpi;
-  }
-
-  const formData = new FormData();
-  formData.append("image", file);
-  formData.append("width", Math.round(width));
-  formData.append("height", Math.round(height));
-  formData.append("format", format);
-  formData.append("quality", quality);
-
+app.post("/resize", upload.single("image"), async (req, res) => {
   try {
-    const res = await fetch("https://snapscale-jvat.onrender.com/resize", {
-      method: "POST",
-      body: formData
-    });
+    if (!req.file) {
+      return res.status(400).send("No image");
+    }
 
-    if (!res.ok) throw new Error();
+    let width = parseInt(req.body.width);
+    let height = parseInt(req.body.height);
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    if (!width) width = null;
+    if (!height) height = null;
 
-    document.getElementById("preview").src = url;
+    const format = req.body.format || "jpeg";
+    const quality = parseFloat(req.body.quality || 0.8) * 100;
 
-    const d = document.getElementById("download");
-    d.href = url;
-    d.download = "snapscale." + format;
-    d.style.display = "block";
+    let img = sharp(req.file.buffer);
 
-  } catch {
-    alert("Server error aa raha hai");
+    if (width || height) {
+      img = img.resize(width, height);
+    }
+
+    if (format === "png") img = img.png();
+    else if (format === "webp") img = img.webp({ quality });
+    else img = img.jpeg({ quality });
+
+    const buffer = await img.toBuffer();
+
+    res.set("Content-Type", "image/" + format);
+    res.send(buffer);
+
+  } catch (err) {
+    console.error("ERROR:", err);
+    res.status(500).send("Server error");
   }
+});
 
-  document.getElementById("loader").style.display = "none";
-}
+// ✅ IMPORTANT FIX (Render requires this)
+const PORT = process.env.PORT || 5000;
 
-function setBackground(type) {
-  if (type === "default") {
-    document.body.style.background =
-      "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('bg.jpg')";
-  } 
-  else if (type === "dark") {
-    document.body.style.background = "#020617";
-  } 
-  else {
-    document.body.style.background = "linear-gradient(45deg,#0f172a,#1e293b)";
-  }
-}
+app.listen(PORT, () => {
+  console.log("🚀 Server running on port " + PORT);
+});
